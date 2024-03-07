@@ -24,8 +24,6 @@ def addGitignore(path_name):
             gitignore.write("# .gitignore automatically generated. \n")
     with open(path_gitignore, 'r') as gitignore:
         readed_gitignore = gitignore.readlines()
-        for label in readed_gitignore:
-            print(label)
     if path_name not in readed_gitignore:
         os.system(f'echo "{path_name}/" >> {path_gitignore}')    
     else:
