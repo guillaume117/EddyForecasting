@@ -1,0 +1,7 @@
+dataset/
+UNET_trained/
+data/eddies_TRAIN_for_FORECAST.nc
+data/OSSE_U_V_SLA_SST_2015_TEST_for_FORECAST.nc
+data/OSSE_U_V_SLA_SST_2015_TRAIN_for_FORECAST.nc
+data/OSSE_U_V_SLA_SST_2015_TRAIN_for_FORECAST.nc
+UNet_trained/UNet_Train_1_Epoch_98_valacc_91.76040649414062.pth
