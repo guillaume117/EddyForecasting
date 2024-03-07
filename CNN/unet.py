@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 
 
-
+# TODO : modify this class IOT be adjustable
 
 class UNet(nn.Module):
     def __init__(self, n_class, verbose= False):
