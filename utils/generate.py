@@ -38,14 +38,18 @@ class GenerateDataset():
 
 
     def generate(self):
-        files = []
-        for dirname, _, filenames in os.walk('./data/'):
-            for filename in filenames:
-                print(os.path.join(dirname, filename))
-                files.append(os.path.join(dirname, filename))
-        self.eddies_train = xr.open_dataset(files[1])
-        self.OSSE_test = xr.open_dataset(files[0])
-        self.OSSE_train = xr.open_dataset(files[2])
+        #files = []
+        #for dirname, _, filenames in os.walk('./data/'):
+        #    for filename in filenames:
+        #        print(os.path.join(dirname, filename))
+        #        files.append(os.path.join(dirname, filename))
+        #self.eddies_train = xr.open_dataset(files[1])
+        #self.OSSE_test = xr.open_dataset(files[0])
+        #self.OSSE_train = xr.open_dataset(files[2])
+        #self.OSSE_train = self.OSSE_train.rename({"time_counter":"time"})
+        self.eddies_train = xr.open_dataset('data/eddies_TRAIN_for_FORECAST.nc')
+        self.OSSE_test = xr.open_dataset('data/OSSE_U_V_SLA_SST_2015_TEST_for_FORECAST.nc')
+        self.OSSE_train = xr.open_dataset('data/OSSE_U_V_SLA_SST_2015_TRAIN_for_FORECAST.nc')
         self.OSSE_train = self.OSSE_train.rename({"time_counter":"time"})
        
 
