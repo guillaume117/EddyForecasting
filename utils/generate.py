@@ -21,7 +21,7 @@ class GenerateDataset():
     This class is used to generate the dataset from the OSSE and eddies files.
     It is also used to split the dataset into train and validation datasets, and to generate the mask 
     for the label and input datasets (we don't want to train our model over land).
-    
+
     """
 
 
@@ -87,29 +87,18 @@ class GenerateDataset():
                  val_dataset : tensor : the validation dataset
         """
 
-        path = 'dataset/'+running_instance
-        addGitignore(path)
-
-     
-        if not os.path.exists(path):
-            os.makedirs(path)
-        else:
-            pass
-        pass
+        
     
         dataset = TensorDataset(X, y)
         validation_fraction = 0.2
         val_size = int(validation_fraction * len(dataset))
         train_size = len(dataset) - val_size
         train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-        torch.save(train_dataset,f'{path}/TrainDataset_{running_instance}__dataset.pt')
-        torch.save(val_dataset,f'{path}/ValDataset_{running_instance}__dataset.pt')
-        self.train_path = f'{path}/TrainDataset_{running_instance}__dataset.pt'
-        self.val_path = f'{path}/ValDataset_{running_instance}__dataset.pt'
-        torch.save(self.nan_mask_label_deconv,f'{path}/nan_mask_label_deconv_{running_instance}.pt')
-        torch.save(self.nan_mask_label,f'{path}/nan_mask_label_{running_instance}.pt')
-        self.nan_mask_label_deconv_path = f'{path}/nan_mask_label_deconv_{running_instance}.pt'
-        self.nan_mask_label_path = f'{path}/nan_mask_label_{running_instance}.pt'
+        torch.save(train_dataset,self.train_path)
+        torch.save(val_dataset,self.val_path)
+        torch.save(self.nan_mask_label_deconv,self.nan_mask_label_deconv_path)
+        torch.save(self.nan_mask_label,self.nan_mask_label_path)
+        
         return train_dataset,val_dataset
     
     
@@ -125,6 +114,20 @@ class GenerateDataset():
                  nan_mask_label_deconv : tensor : the mask for the label dataset
                  nan_mask_label : tensor : the mask for the input dataset
         """
+        path = 'dataset/'+running_instance
+        addGitignore(path)
+
+     
+        if not os.path.exists(path):
+            os.makedirs(path)
+        else:
+            pass
+        pass
+        self.train_path = f'{path}/TrainDataset_{running_instance}__dataset.pt'
+        self.val_path = f'{path}/ValDataset_{running_instance}__dataset.pt'
+        self.nan_mask_label_deconv_path = f'{path}/nan_mask_label_deconv_{running_instance}.pt'
+        self.nan_mask_label_path = f'{path}/nan_mask_label_{running_instance}.pt'
+
         followingDatesIndex= self.followingDates(num_date,type=type)
         if type =='Train':
             X_dataset_train= torch.tensor(np.array([[self.OSSE_train.sossheig.values[i+j]for i in range(num_date)] for j in followingDatesIndex]))
@@ -165,10 +168,7 @@ class GenerateDataset():
                 print("*"*100)
              
             else :
-                dataset = TensorDataset(X_dataset_train, y_dataset_train)
-                del X_dataset_train,y_dataset_train
-
-                return dataset,self.nan_mask_label_deconv, self.nan_mask_label
+                pass
         
         if type == 'Test':
             print('test')
