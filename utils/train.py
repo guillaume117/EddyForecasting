@@ -39,7 +39,7 @@ class TrainDataset:
         self.running_instance = running_instance
         self.num_dates = num_dates
 
-        path = 'UNET_trained'
+        path = 'UNet_trained'
         addGitignore(path)
 
         if not os.path.exists(path):
