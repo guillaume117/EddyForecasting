@@ -19,14 +19,21 @@ import os
 class GenerateDataset():
     """ 
     This class is used to generate the dataset from the OSSE and eddies files.
-    It is also used to split the dataset into train and validation datasets.
+    It is also used to split the dataset into train and validation datasets, and to generate the mask 
+    for the label and input datasets (we don't want to train our model over land).
     
     """
+
+
     def __init__(self):
         self.OSSE_test  = None
         self.OSSE_train = None
         self.eddies_train = None
         self.following_dates = []
+        self.train_path = None
+        self.val_path = None
+        self.nan_mask_label_deconv = None
+        self.nan_mask_label = None
         self.generate()
 
 
@@ -50,6 +57,9 @@ class GenerateDataset():
         else:
             pass
         pass
+
+
+
     def followingDates(self,num_date,type='Train'):
         """ This function is used to get the following dates index for the train and test datasets.
         It is used to generate the dataset, in fact we need to have a sequence of num_date dates to predict the next num_date dates.
@@ -67,7 +77,7 @@ class GenerateDataset():
 
         return followingDatesIndex
     
-    def generateAndSplitDataset(self,X,y, validation_fraction=0.2,running_instance = 'Train_2'):
+    def generateAndSplitDataset(self,X,y, validation_fraction=0.2,running_instance = 'Running_instance'):
         """ This function is used to generate and split the dataset into train and validation datasets.
         input : X : tensor : the input dataset
                 y : tensor : the target dataset
@@ -77,7 +87,7 @@ class GenerateDataset():
                  val_dataset : tensor : the validation dataset
         """
 
-        path = 'DATASET_'+running_instance
+        path = 'dataset/'+running_instance
         addGitignore(path)
 
      
@@ -93,11 +103,17 @@ class GenerateDataset():
         train_size = len(dataset) - val_size
         train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
         torch.save(train_dataset,f'{path}/TrainDataset_{running_instance}__dataset.pt')
-        torch.save(val_dataset,f'{path}/ValDataset{running_instance}__dataset.pt')
+        torch.save(val_dataset,f'{path}/ValDataset_{running_instance}__dataset.pt')
+        self.train_path = f'{path}/TrainDataset_{running_instance}__dataset.pt'
+        self.val_path = f'{path}/ValDataset_{running_instance}__dataset.pt'
+        torch.save(self.nan_mask_label_deconv,f'{path}/nan_mask_label_deconv_{running_instance}.pt')
+        torch.save(self.nan_mask_label,f'{path}/nan_mask_label_{running_instance}.pt')
+        self.nan_mask_label_deconv_path = f'{path}/nan_mask_label_deconv_{running_instance}.pt'
+        self.nan_mask_label_path = f'{path}/nan_mask_label_{running_instance}.pt'
         return train_dataset,val_dataset
     
     
-    def preprocessingData(self,num_date,type ='Train',running_instance = 'Train_2',generate =False, validation_fraction=0.2):
+    def processingData(self,num_date,type ='Train',running_instance = 'Train_2',generate =False, validation_fraction=0.2):
         """ This function is used to preprocess the data, it generates the dataset and split it into train and validation datasets.
         input : num_date : int : the number of dates to predict
                 type : str : 'Train' or 'Test'
@@ -114,7 +130,7 @@ class GenerateDataset():
             X_dataset_train= torch.tensor(np.array([[self.OSSE_train.sossheig.values[i+j]for i in range(num_date)] for j in followingDatesIndex]))
             y_dataset_train = torch.tensor(np.array([[self.eddies_train.eddies.values[i+j]for i in range(num_date,2*num_date)]for j in followingDatesIndex]))
             trans = transforms.Resize((96*4,192*4))
-            nan_mask_label_deconv = torch.isnan(y_dataset_train)
+            self.nan_mask_label_deconv = torch.isnan(y_dataset_train)
             X_dataset_train=trans(X_dataset_train)
             y_dataset_train=trans(y_dataset_train)
             #Separation of eddies results on 3 layers
@@ -124,8 +140,8 @@ class GenerateDataset():
             condition_2 = (y_dataset_train>=1.5)
             y_dataset_train= torch.cat([torch.where(condition_0,torch.tensor(1),torch.tensor(0)),
                              torch.where(condition_1,torch.tensor(1),torch.tensor(0)),torch.where(condition_2,torch.tensor(1),torch.tensor(0))],dim=1)
-            nan_mask_label = torch.isnan(y_dataset_train)
-            y_dataset_train = torch.where(nan_mask_label, torch.tensor(0), y_dataset_train)
+            self.nan_mask_label = torch.isnan(y_dataset_train)
+            y_dataset_train = torch.where(self.nan_mask_label, torch.tensor(0), y_dataset_train)
             nan_mask = torch.isnan(X_dataset_train)
             X_dataset_train = torch.where(nan_mask, torch.tensor(0.0), X_dataset_train)
             print("*"*100)
@@ -138,19 +154,39 @@ class GenerateDataset():
                 del X_dataset_train,y_dataset_train
                 print("*"*100)
                 print(f"train_dataset has been created, inputs shape, {len(train_dataset)} elements.")
+                print(f"recorded at {self.train_path}")
                 print(f"train_dataset has been created, inputs shape, {len(val_dataset)} elements.")
+                print(f"recorded at {self.val_path}")
+                print(f"nan_mask_label_deconv has been created shape, {self.nan_mask_label_deconv.shape}")
+                print(f"recorded at {self.nan_mask_label_deconv_path}")
+                print(f"nan_mask_label has been created shape, {self.nan_mask_label.shape}")
+                print(f"recorded at {self.nan_mask_label_path}")
+                
                 print("*"*100)
-                return train_dataset, val_dataset,nan_mask_label_deconv, nan_mask_label
+             
             else :
                 dataset = TensorDataset(X_dataset_train, y_dataset_train)
                 del X_dataset_train,y_dataset_train
 
-                return dataset,nan_mask_label_deconv, nan_mask_label
+                return dataset,self.nan_mask_label_deconv, self.nan_mask_label
         
         if type == 'Test':
             print('test')
             X_dataset_test = torch.tensor(np.array([[self.OSSE_test.sossheig.values[i+j]for i in range(num_date)] for j in followingDatesIndex]))
             
             return X_dataset_test
+    
+    def getTrainPath(self):
+        return self.train_path
+    
+    def getValPath(self):    
+        return self.val_path
+    
+    def getNanMaskLabelDeconvPath(self):
+        return self.nan_mask_label_deconv_path
+    
+    def getNanMaskLabelPath(self):
+        return self.nan_mask_label_path
+    
         
     

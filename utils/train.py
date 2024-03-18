@@ -24,7 +24,7 @@ class TrainDataset:
     output : model : tensor : the trained model
     """
     def __init__(self,model,criterion,
-                 optimizer,scheduler,num_epochs,learning_rate,batch_size,device,nan_mask_label,running_instance):
+                 optimizer,scheduler,num_epochs,learning_rate,batch_size,device,nan_mask_label,running_instance,num_dates):
         self.device = device
         self.model = model
         self.criterion=criterion
@@ -35,6 +35,7 @@ class TrainDataset:
         self.learning_rate =learning_rate
         self.nan_mask_label = nan_mask_label
         self.running_instance = running_instance
+        self.num_dates = num_dates
 
 
 
@@ -52,7 +53,7 @@ class TrainDataset:
         val_loss = []
         train_acc = []
         train_loss = []
-        epoch=40
+        epoch=0
 
         train_loader  = DataLoader(dataset = train_dataset, batch_size=self.batch_size, shuffle =True,drop_last=True)
         val_loader = DataLoader(dataset = val_dataset, batch_size=self.batch_size,shuffle=True, drop_last=True)
@@ -66,7 +67,7 @@ class TrainDataset:
        
 
         
-        for epoch in range(64,self.num_epochs):
+        for epoch in range(self.num_epochs):
 
             print('-' * 100)
             print('Epoch {}/{}'.format(epoch, self.num_epochs))
@@ -83,13 +84,15 @@ class TrainDataset:
                 for inputs, labels in dataloaders[phase]:
                     batch_number+=1
 
-                    if self.device == 'mps':
-                        #if the device is mps, we need to convert the inputs and labels to float and to the device
+                    if self.device.type == 'mps':
+                    
+                   
 
                         inputs = inputs.to(self.device).float()
                         labels = labels.to(self.device).float()
                     else :
                         #if the device is cuda or cpu, we need to convert the inputs and labels to the device
+                        print("cuda or cpu")
                         inputs = inputs.to(self.device)
                         labels = labels.to(self.device)
                         
@@ -106,7 +109,7 @@ class TrainDataset:
                         if (batch_number%10==0 )|(phase == 'val')|(batch_number ==1):
                             batch_acc_single_element +=1
                             #reshaping the output to get the max indices and the one hot encoding over the 3 channels of the output
-                            reshaped_output = outputs.view(outputs.size(0), 3, 10, outputs.size(2), outputs.size(3))
+                            reshaped_output = outputs.view(outputs.size(0), 3, self.num_dates, outputs.size(2), outputs.size(3))
                                     
                             max_indices = torch.argmax(reshaped_output, dim=1)
                             one_hot_encoding = torch.zeros_like(reshaped_output)
