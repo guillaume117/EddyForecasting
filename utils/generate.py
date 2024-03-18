@@ -98,6 +98,7 @@ class GenerateDataset():
         val_size = int(validation_fraction * len(dataset))
         train_size = len(dataset) - val_size
         train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
+        del dataset
         torch.save(train_dataset,self.train_path)
         torch.save(val_dataset,self.val_path)
         torch.save(self.nan_mask_label_deconv,self.nan_mask_label_deconv_path)
@@ -136,7 +137,7 @@ class GenerateDataset():
         if type =='Train':
             X_dataset_train= torch.tensor(np.array([[self.OSSE_train.sossheig.values[i+j]for i in range(num_date)] for j in followingDatesIndex]))
             y_dataset_train = torch.tensor(np.array([[self.eddies_train.eddies.values[i+j]for i in range(num_date,2*num_date)]for j in followingDatesIndex]))
-            trans = transforms.Resize((96*4,192*4))
+            trans = transforms.Resize((96*2,192*2))
             self.nan_mask_label_deconv = torch.isnan(y_dataset_train)
             X_dataset_train=trans(X_dataset_train)
             y_dataset_train=trans(y_dataset_train)

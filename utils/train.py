@@ -135,7 +135,7 @@ class TrainDataset:
                 if phase == 'val' and epoch_acc > best_acc:
                     best_acc = epoch_acc
                     best_model_wts = copy.deepcopy(self.model.state_dict())
-                    torch.save(model.state_dict(), f'UNet_trained/UNet_{self.running_instance}_Epoch_{epoch}_valacc_{epoch_acc}.pth')
+                    torch.save(self.model.state_dict(), f'UNet_trained/UNet_{self.running_instance}_Epoch_{epoch}_valacc_{epoch_acc}.pth')
             
             print()
             
