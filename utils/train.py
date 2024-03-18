@@ -92,9 +92,9 @@ class TrainDataset:
                         labels = labels.to(self.device).float()
                     else :
                         #if the device is cuda or cpu, we need to convert the inputs and labels to the device
-                        print("cuda or cpu")
-                        inputs = inputs.to(self.device)
-                        labels = labels.to(self.device)
+
+                        inputs = inputs.to(self.device).float()
+                        labels = labels.to(self.device).float()
                         
 
                     self.optimizer.zero_grad()
