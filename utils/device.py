@@ -14,5 +14,5 @@ def self_device():
         device = torch.device("cuda")
     else: 
         device = torch.device("cpu")
-        running_instance = 'Train_1'
+
     return device 
